@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI;
 using Microsoft.EntityFrameworkCore;
 using ServersideProjektH5.Areas.Identity;
+using ServersideProjektH5.Codes;
 using ServersideProjektH5.Data;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -20,6 +21,19 @@ builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 builder.Services.AddScoped<AuthenticationStateProvider, RevalidatingIdentityAuthenticationStateProvider<IdentityUser>>();
 builder.Services.AddSingleton<WeatherForecastService>();
+
+// NVS
+builder.Services.AddAuthorization(options => 
+{ 
+    options.AddPolicy("RequireAuthenticatedUser", policy => 
+    { 
+        policy.RequireAuthenticatedUser(); 
+    }); 
+});
+
+// Encryption
+builder.Services.AddDataProtection();
+builder.Services.AddSingleton<Encryption>();
 
 var app = builder.Build();
 
