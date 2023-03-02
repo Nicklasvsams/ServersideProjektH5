@@ -7,20 +7,28 @@ using Microsoft.EntityFrameworkCore;
 using ServersideProjektH5.Areas.Identity;
 using ServersideProjektH5.Codes;
 using ServersideProjektH5.Data;
+using ServersideProjektH5.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+
+// Identity DB connection
+var ídentityConnectionString = builder.Configuration.GetConnectionString("IdentityConnection") ?? throw new InvalidOperationException("Connection string 'IdentityConnection' not found.");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(connectionString));
+    options.UseSqlServer(ídentityConnectionString));
+
+// ToDo DB connection
+var toDoConnectionString = builder.Configuration.GetConnectionString("ToDoConnection") ?? throw new InvalidOperationException("Connection string 'ToDoConnection' not found.");
+builder.Services.AddDbContext<ToDoDBContext>(options =>
+    options.UseSqlServer(toDoConnectionString));
+
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
     .AddEntityFrameworkStores<ApplicationDbContext>();
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 builder.Services.AddScoped<AuthenticationStateProvider, RevalidatingIdentityAuthenticationStateProvider<IdentityUser>>();
-builder.Services.AddSingleton<WeatherForecastService>();
 
 // NVS
 builder.Services.AddAuthorization(options => 
@@ -30,6 +38,9 @@ builder.Services.AddAuthorization(options =>
         policy.RequireAuthenticatedUser(); 
     }); 
 });
+
+// DB Repository
+builder.Services.AddScoped<ToDoRepo>();
 
 // Encryption
 builder.Services.AddDataProtection();
