@@ -1,8 +1,10 @@
 ﻿@using System.Security.Cryptography;
+@using ServersideProjektH5.Codes;
 @using ServersideProjektH5.Data;
 @using ServersideProjektH5.Models;
 @inject ServersideProjektH5.Codes.Encryption _encryption;
 @inject ServersideProjektH5.Codes.ToDoRepo _toDoRepo;
+@inject NavigationManager UriHelper
 @page "/"
 
 <PageTitle>To Do Site</PageTitle>
@@ -14,7 +16,7 @@
     @foreach(var todo in userToDoList)
     {
         <div class="d-flex p-1 mx-auto">
-            <p>Title: @todo.Title - Description: @todo.Description</p>
+            <p>Title: @_encryption.Unprotect(todo.Title) - Description: @_encryption.Unprotect(todo.Description)</p>
         </div>
     }
 
@@ -28,6 +30,9 @@
 
         <button type="submit">Submit</button>
     </EditForm>
+
+    <button @onclick="NavigateToHashing">Check hashing</button>
+    <button @onclick="NavigateToHashingWithAttack">Check hashing med angreb</button>
 
     <h5>
         @if (message != null && message.Trim() != "")
@@ -46,44 +51,14 @@ else
     private Task<AuthenticationState>? _authStateTask { get; set; }
     private ToDoDBContext? _dBContext { get; set; }
 
-    private string? currentUser { get; set; }
     private string message { get; set; } = "";
     private bool isAuthenticated { get; set; }
-    private List<ToDoModel> userToDoList { get; set; } = new List<ToDoModel>();
+    public static List<ToDoModel> userToDoList { get; set; } = new List<ToDoModel>();
+    public static string? currentUser { get; set; }
 
     protected override async void OnInitialized()
     {
-        if (_authStateTask != null)
-        {
-            var authState = await _authStateTask;
-
-            currentUser = authState.User.Identity.Name;
-            isAuthenticated = authState.User.Identity.IsAuthenticated;
-
-            if (isAuthenticated)
-            {
-                var todos = _toDoRepo.GetAllToDosByUsernameAsync(authState.User.Identity.Name);
-                userToDoList = (List<ToDoModel>)todos;
-            }
-        }
-
-
-
-        //string result = _encryption.Protect("Hello");
-        //result = _encryption.Unprotect(result);
-
-        //string myPass = "Passw0rd!";
-        //string? salt = "dfsdgdfjgfjyerg4t5yu6jh";
-
-        //MD5 md5 = MD5.Create();
-        //byte[] passwordBytes = System.Text.Encoding.UTF8.GetBytes(myPass + salt);
-        //byte[] hash = md5.ComputeHash(passwordBytes);
-        //string hashToString = Convert.ToBase64String(hash);
-
-        //string bCryptSalt = BCrypt.Net.BCrypt.GenerateSalt();
-        //bCryptSalt = "$2a$11$VG4JBOi1NCu/F/.sSR2vq.";
-        //string bCryptHash = BCrypt.Net.BCrypt.HashPassword(myPass, bCryptSalt);
-        //bool hasMatched = BCrypt.Net.BCrypt.Verify(myPass, bCryptHash);
+        GetAllToDos();
     }
 
     private ToDoModel toDoModel = new();
@@ -98,19 +73,48 @@ else
         {
             ToDoModel toDo = new();
 
-            toDo.Title = toDoModel.Title;
-            toDo.Description = toDoModel.Description;
+            toDo.Title = _encryption.Protect(toDoModel.Title);
+            toDo.Description = _encryption.Protect(toDoModel.Description);
             toDo.User = authState.User.Identity.Name;
 
             toDoModel.Title = "";
             toDoModel.Description = "";
 
             message = _toDoRepo.InsertToDoAsync(toDo) ? "To Do was successfully saved!" : "An error occured... Try again?";
+            GetAllToDos();
         }
     }
 
     private void HandleInvalidSubmit()
     {
         message = "Please fill both fields...";
+    }
+
+    private async void GetAllToDos()
+    {
+        if (_authStateTask != null)
+        {
+            var authState = await _authStateTask;
+
+            currentUser = authState.User.Identity.Name;
+            isAuthenticated = authState.User.Identity.IsAuthenticated;
+
+            if (isAuthenticated)
+            {
+                var todos = _toDoRepo.GetAllToDosByUsernameAsync(authState.User.Identity.Name);
+                userToDoList = (List<ToDoModel>)todos;
+            }
+        }
+    }
+
+    private void NavigateToHashing()
+    {
+        UriHelper.NavigateTo("/hashing");
+    }
+
+    private void NavigateToHashingWithAttack()
+    {
+        Hashing.isAttack = true;
+        UriHelper.NavigateTo("/hashing");
     }
 }

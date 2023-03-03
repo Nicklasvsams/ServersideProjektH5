@@ -1,0 +1,42 @@
+﻿@page "/hashing"
+@using ServersideProjektH5.Codes;
+@using ServersideProjektH5.Models;
+@inject ToDoRepo _toDoRepo;
+
+<p>
+    Status for hashset:
+@if (isValid)
+{
+        <span>Match!</span>
+    }
+    else
+    {
+        <span>Ikke match!</span>
+    }
+</p>
+
+
+@code {
+    private List<ToDoModel> toDos { get; set; } = new();
+    private bool isValid { get; set; }
+    public static bool isAttack { get; set; }
+
+    protected override void OnInitialized()
+    {
+        if (Index.userToDoList != null && Index.currentUser != null)
+        {
+            toDos = _toDoRepo.GetAllToDosByUsernameAsync(Index.currentUser);
+
+            if (isAttack)
+            {
+                Index.userToDoList = new List<ToDoModel>() { new ToDoModel() { Id = 0, Title = "Attack", Description = "Attack", User = "Attacker" } };
+                isAttack = false;
+            }
+
+            HashSet<int> hashSet1 = new HashSet<int>(Index.userToDoList.Select(x => x.GetHashCode()));
+            HashSet<int> hashSet2 = new HashSet<int>(toDos.Select(x => x.GetHashCode()));
+
+            isValid = hashSet1.SetEquals(hashSet2);
+        }
+    }
+}
