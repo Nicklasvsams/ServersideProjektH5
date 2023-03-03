@@ -1,13 +1,9 @@
-using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
-using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.UI;
 using Microsoft.EntityFrameworkCore;
 using ServersideProjektH5.Areas.Identity;
 using ServersideProjektH5.Codes;
 using ServersideProjektH5.Data;
-using ServersideProjektH5.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
